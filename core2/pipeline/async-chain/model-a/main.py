@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.responses import Response
 import logging
 
 app = FastAPI()
@@ -6,13 +7,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-@app.post("/predict")
+@app.api_route("/predict", methods=["POST", "HEAD"])
 async def predict(request: Request):
+    if request.method == "HEAD":
+        return Response(status_code=200)
+    
     payload = await request.json()
     logger.info(f"model-a received: {payload}")
 
-    # Process the input — in real migration this is your model inference
-    # Here we just add a tag to show it passed through model-a
     output = {
         "data": payload.get("data", {}),
         "passed_through": "model-a"
@@ -20,3 +22,8 @@ async def predict(request: Request):
 
     logger.info(f"model-a output: {output}")
     return output
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
